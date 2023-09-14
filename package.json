@@ -1,0 +1,48 @@
+{
+  "name": "majorkey-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "@prisma/client": "^4.6.1",
+    "bcrypt": "^5.1.0",
+    "body-parser": "^1.20.1",
+    "cookie": "^0.5.0",
+    "cors": "^2.8.5",
+    "dayjs": "^1.11.7",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
+    "lodash": "^4.17.21",
+    "node-schedule": "^2.1.0",
+    "nodemon": "^2.0.20",
+    "prettier": "^2.7.1",
+    "request-ip": "^3.3.0",
+    "typescript": "^4.8.4"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.ts",
+    "dev": "concurrently \" npm start --prefix ../majorkey-app\" \" npm start \" "
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/datahive-master/majorkey-server.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/datahive-master/majorkey-server/issues"
+  },
+  "homepage": "https://github.com/datahive-master/majorkey-server#readme",
+  "devDependencies": {
+    "@mermaid-js/mermaid-cli": "^9.3.0",
+    "@types/bcrypt": "^5.0.0",
+    "@types/cookie": "^0.5.1",
+    "@types/cors": "^2.8.12",
+    "@types/jsonwebtoken": "^9.0.0",
+    "@types/node-schedule": "^2.1.0",
+    "prisma": "^4.6.1",
+    "prisma-erd-generator": "^1.2.4",
+    "ts-node": "^10.9.1"
+  }
+}

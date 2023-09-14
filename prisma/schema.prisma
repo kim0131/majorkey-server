@@ -1,0 +1,1034 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+// generator erd {
+//   provider                  = "prisma-erd-generator"
+//   output                    = "./ERD.pdf"
+//   includeRelationFromFields = true
+//   theme                     = "forest"
+// }
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 Int                  @id @default(autoincrement())
+  account            String               @unique
+  name               String
+  password           String
+  birth              DateTime
+  phone              String               @unique
+  email              String               @unique
+  thumbnail          String?              @db.LongText
+  gradeId            Int
+  grade              Grade                @relation(fields: [gradeId], references: [id])
+  class              String
+  schoolId           Int
+  school             School               @relation(fields: [schoolId], references: [id])
+  careerDetailId     Int
+  careerDetail       CareerDetail         @relation(fields: [careerDetailId], references: [id])
+  favoriteSubjectId  Int
+  favoriteSubject    Subject              @relation("favoriteSubject", fields: [favoriteSubjectId], references: [id])
+  hateSubjectId      Int
+  hateSubject        Subject              @relation("hateSubject", fields: [hateSubjectId], references: [id])
+  wellSubjectId      Int
+  wellSubject        Subject              @relation("wellSubject", fields: [wellSubjectId], references: [id])
+  lessSubjectId      Int
+  lessSubject        Subject              @relation("lessSubject", fields: [lessSubjectId], references: [id])
+  managerId          Int?
+  manager            Manager?             @relation(fields: [managerId], references: [id])
+  managerState       Int? // 1: 대기, 2: 승인
+  learningAssessment LearningAssessment[]
+  careerAssessment   CareerAssessment[]
+  ebti               Ebti[]
+  ebti1              Ebti1[]
+  ebti2              Ebti2[]
+  customizedPlan     CustomizedPlan[]
+  collegeDepartment  CollegeDepartment[]
+  expectSchool       ExpectSchool[]
+  expectExam         ExpectExam[]
+  expectStudent      ExpectStudent[]
+  invoiceUserLog     InvoiceUserLog[]
+  createDate         DateTime             @default(now())
+  updateDate         DateTime             @updatedAt
+}
+
+model Manager {
+  id                    Int              @id @default(autoincrement())
+  account               String           @unique
+  password              String
+  email                 String
+  state                 Boolean          @default(false)
+  homepage              String?
+  businessName          String
+  businessNumber        String
+  businessCeoName       String
+  businessPhone         String
+  businessAddress       String
+  businessAddressDetail String
+  cityId                Int
+  city                  City             @relation(fields: [cityId], references: [id])
+  terms                 Boolean          @default(true)
+  privacy               Boolean          @default(true)
+  user                  User[]
+  trainer               Trainer[]
+  invoice               Invoice[]
+  invoiceUserLog        InvoiceUserLog[]
+  createDate            DateTime         @default(now())
+  updateDate            DateTime         @updatedAt
+}
+
+model Admin {
+  id         Int      @id @default(autoincrement())
+  account    String   @unique
+  name       String
+  password   String
+  type       Int // 1: 최고관리자, 2: 지역 관리자
+  managerIds String?  @db.LongText // 반영 비율
+  createDate DateTime @default(now())
+  updateDate DateTime @updatedAt
+}
+
+model Grade {
+  id         Int      @id @default(autoincrement())
+  name       String
+  user       User[]
+  createDate DateTime @default(now())
+  updateDate DateTime @updatedAt
+}
+
+model School {
+  id         Int      @id @default(autoincrement())
+  name       String
+  cityId     Int
+  city       City     @relation(fields: [cityId], references: [id])
+  user       User[]
+  createDate DateTime @default(now())
+  updateDate DateTime @updatedAt
+}
+
+model Career {
+  id           Int            @id @default(autoincrement())
+  name         String         @unique
+  careerDetail CareerDetail[]
+  createDate   DateTime       @default(now())
+  updateDate   DateTime       @updatedAt
+}
+
+model CareerDetail {
+  id         Int      @id @default(autoincrement())
+  name       String
+  careerId   Int
+  career     Career   @relation(fields: [careerId], references: [id])
+  user       User[]
+  createDate DateTime @default(now())
+  updateDate DateTime @updatedAt
+}
+
+model City {
+  id         Int       @id @default(autoincrement())
+  name       String    @unique
+  manager    Manager[]
+  school     School[]
+  createDate DateTime  @default(now())
+  updateDate DateTime  @updatedAt
+}
+
+model Textbook {
+  id                         Int                  @id @default(autoincrement())
+  name                       String               @unique
+  publisher                  String?
+  subject                    Subject?             @relation(fields: [subjectId], references: [id])
+  subjectId                  Int?
+  conceptLearningAssessment  LearningAssessment[] @relation("conceptLearningAssessmentTextbook")
+  questionLearningAssessment LearningAssessment[] @relation("questionLearningAssessmentTextbook")
+  advancedLearningAssessment LearningAssessment[] @relation("advancedLearningAssessmentTextbook")
+  actualLearningAssessment   LearningAssessment[] @relation("actualLearningAssessmentTextbook")
+  conceptCustomizedPlan      CustomizedPlan[]     @relation("conceptCustomizedPlanTextbook")
+  questionCustomizedPlan     CustomizedPlan[]     @relation("questionCustomizedPlanTextbook")
+  advancedCustomizedPlan     CustomizedPlan[]     @relation("advancedCustomizedPlanTextbook")
+  actualCustomizedPlan       CustomizedPlan[]     @relation("actualCustomizedPlanTextbook")
+  createDate                 DateTime             @default(now())
+  updateDate                 DateTime             @updatedAt
+}
+
+model Subject {
+  id                 Int                  @id @default(autoincrement())
+  name               String               @unique
+  less               User[]               @relation("lessSubject")
+  well               User[]               @relation("wellSubject")
+  hate               User[]               @relation("hateSubject")
+  favorite           User[]               @relation("favoriteSubject")
+  learningAssessment LearningAssessment[]
+  careerAssessment   CareerAssessment[]
+  customizedPlan     CustomizedPlan[]
+  expectSchool       ExpectSchool[]
+  expectExam         ExpectExam[]
+  trainer            Trainer[]
+  textbook           Textbook[]
+  createDate         DateTime             @default(now())
+  updateDate         DateTime             @updatedAt
+}
+
+model LearningAssessment {
+  id                   Int       @id @default(autoincrement())
+  user                 User      @relation(fields: [userId], references: [id])
+  userId               Int
+  subject              Subject   @relation(fields: [subjectId], references: [id])
+  subjectId            Int
+  duration             Int
+  hour                 Int
+  minutes              Int
+  concentrationHour    Int
+  concentrationMinutes Int
+  averageHour          Int
+  averageMinutes       Int
+  recHour              Int
+  recMinutes           Int
+  recProblem           Int
+  unit                 String // 학습단원
+  conceptItem          Int // 1: 강의, 2:정독, 3:암기, 4:노트정리, 5:안함
+  conceptTextbookName  String? // 개념공부
+  conceptTextbook      Textbook? @relation("conceptLearningAssessmentTextbook", fields: [conceptTextbookName], references: [name])
+  conceptAmount        Int? // 1: 30%미만, 2: 60%미만, 3: 80%미만, 4: 90% ~ 100미만, 5: 100%
+  conceptStrength      Int? // 1: 30%미만, 2: 60%미만, 3: 80%미만, 4: 90% ~ 100미만, 5: 100%
+  conceptLevel         Int?
+  conceptMessage       String?
+  questionItem         Int // 1: 기본문제, 2:문제 + 채점, 3:문제 + 오답분석, 4:오답분석만, 5:안함
+  questionTextbookName String? // 문제풀이
+  questionTextbook     Textbook? @relation("questionLearningAssessmentTextbook", fields: [questionTextbookName], references: [name])
+  questionAmount       Int? // 1: 30%미만, 2: 60%미만, 3: 80%미만, 4: 90% ~ 100미만, 5: 100%
+  questionStrength     Int? // 1: 30%미만, 2: 60%미만, 3: 80%미만, 4: 90% ~ 100미만, 5: 100%
+  questionLevel        Int?
+  questionMessage      String?
+  advancedItem         Int // 1: 기출문제, 2:심화개념, 3:고난도 문제풀이, 4:신유형문제, 5:안함
+  advancedTextbookName String? // 심화학습
+  advancedTextbook     Textbook? @relation("advancedLearningAssessmentTextbook", fields: [advancedTextbookName], references: [name])
+  advancedAmount       Int? // 1: 30%미만, 2: 60%미만, 3: 80%미만, 4: 90% ~ 100미만, 5: 100%
+  advancedStrength     Int? // 1: 30%미만, 2: 60%미만, 3: 80%미만, 4: 90% ~ 100미만, 5: 100%
+  advancedLevel        Int?
+  advancedMessage      String?
+  actualItem           Int // 1: 기출문제만, 2:기출문제 + 시간체크, 3:모의실전문제, 4:모의실전문제+시간체크, 5:안함
+  actualTextbookName   String? // 실전대비
+  actualTextbook       Textbook? @relation("actualLearningAssessmentTextbook", fields: [actualTextbookName], references: [name])
+  actualAmount         Int? // 1: 30%미만, 2: 60%미만, 3: 80%미만, 4: 90% ~ 100미만, 5: 100%
+  actualStrength       Int? // 1: 30%미만, 2: 60%미만, 3: 80%미만, 4: 90% ~ 100미만, 5: 100%
+  actualLevel          Int?
+  actualMessage        String?
+  learningCategory     Int // 학습형태, 1: 학교위주, 2: 학원위주, 3: 과외위주, 4: 인강위주, 5:자기주도학습 위주
+  reviewCycle          Int // 복습주기, 1: 매일, 2: 3일, 3: 일주일, 4: 2주일
+  concentration        Int // 집중도
+  understand           Int // 이해도
+  correctRate          Int // 정답률
+  taskComplete         Int // 과제완성도
+  weekPoint            Int // 시험약점, 1: 고난도문제, 2: 시간부족, 3:실전연습, 4:세부개념, 5:학습부족
+  obstruction          String // 방해요인
+  evaluation           String // 한줄평가
+  scoreTotal           Float
+  scoreGrade           String
+  scoreContent         String
+  mentalGrade          Int
+  createDate           DateTime  @default(now())
+  updateDate           DateTime  @updatedAt
+}
+
+model CareerAssessment {
+  id              Int      @id @default(autoincrement())
+  user            User     @relation(fields: [userId], references: [id])
+  userId          Int
+  type            Int // 활동, 1: 동아리활동, 2: 독서활동, 3: 교내대회, 4: 세부능력 특기사항, 5:봉사활동, 6:진로활동, 7:자율활동
+  name            String // 활동명
+  topic           String // 관심주제
+  isInSchool      Boolean // 활동장소, True : 교내, False: 교외
+  month           Int // 활동시기, 숫자 = 달
+  field           Int // 관련분야, 1: 인문, 2: 사회과학, 3: 자연과학, 4: 간호/의학, 5:경영, 6:예체능, 7:교육, 8:공학, 9:농업생명과학, 10:생활과학, 11:호텔관광, 12:특수대/과학기술원, 13:기타
+  subject         Subject  @relation(fields: [subjectId], references: [id])
+  subjectId       Int
+  role            Int // 활동역량, 1: 인문, 2: 부원, 3: 멘토, 4: 멘티, 5:회장, 6:부회장, 7:반장, 8:부반장, 9:기타
+  technique       Int // 관련기법, 1: 말하기/발표, 2: 글쓰기, 3: 외국어, 4: 요약정리, 5:기획, 6:토론, 7:계산/통계, 8:그래프/표 분석, 9:PPT제작, 10: 기기 조작, 11: 정보 습득, 12: 암기, 13: 문제풀이, 14:상담/설명, 15:보고서 작성, 16:실험/실습, 17:영상제작/편집, 18:디자인, 19:컴퓨터 활용, 20: 협업 능력, 21: 의사소통/결정, 22:음악, 23:미술, 24:체육, 25:기타
+  save            Int // 활동기록 저장여부, 1: 1주일 이내, 2: 2주일 이내, 3: 1달 이내, 4: 안함
+  ability         Int // 핵심역량, 1:학업역량 2:진로역량 3:공동체역량
+  abilityDetail   Int // 세부핵심역량, 기획서참고
+  activity        Int // 활동 후 연계활동명, 1: 독서활동, 2: 동아리활동, 3: 주제탐구, 4: 전공연계활동, 5: 진로활동, 6: 교내대회, 7: 봉사활동, 8: 체험활동, 9: 자율활동, 10: 기타, 11: 없음
+  satisfaction    Int      @default(0) // 만족도
+  careerRelevance Int      @default(0) // 진로 연계성
+  selfDirected    Int      @default(0) // 자기주도성
+  scoreTotal      Float
+  scoreGrade      String
+  activityTrigger String? // 활동계기
+  activityContent String? // 활동내용
+  activityReview  String? // 느낌점/배운점
+  createDate      DateTime @default(now())
+  updateDate      DateTime @updatedAt
+}
+
+model Ebti {
+  id              Int      @id @default(autoincrement())
+  userId          Int?     @default(0)
+  user            User?    @relation(fields: [userId], references: [id])
+  type            String
+  real            Int
+  habit           Int
+  research        Int
+  progress        Int
+  society         Int
+  art             Int
+  tscoreReal      Float
+  tscoreHabit     Float
+  tscoreResearch  Float
+  tscoreProgress  Float
+  tscoreSociety   Float
+  tscoreArt       Float
+  percentReal     Float
+  percentHabit    Float
+  percentResearch Float
+  percentProgress Float
+  percentSociety  Float
+  percentArt      Float
+  answer1         Int
+  answer2         Int
+  answer3         Int
+  answer4         Int
+  answer5         Int
+  answer6         Int
+  answer7         Int
+  answer8         Int
+  answer9         Int
+  answer10        Int
+  answer11        Int
+  answer12        Int
+  answer13        Int
+  answer14        Int
+  answer15        Int
+  answer16        Int
+  answer17        Int
+  answer18        Int
+  answer19        Int
+  answer20        Int
+  answer21        Int
+  answer22        Int
+  answer23        Int
+  answer24        Int
+  answer25        Int
+  answer26        Int
+  answer27        Int
+  answer28        Int
+  answer29        Int
+  answer30        Int
+  answer31        Int
+  answer32        Int
+  answer33        Int
+  answer34        Int
+  answer35        Int
+  answer36        Int
+  answer37        Int
+  answer38        Int
+  answer39        Int
+  answer40        Int
+  answer41        Int
+  answer42        Int
+  answer43        Int
+  answer44        Int
+  answer45        Int
+  answer46        Int
+  answer47        Int
+  answer48        Int
+  answer49        Int
+  answer50        Int
+  answer51        Int
+  answer52        Int
+  answer53        Int
+  answer54        Int
+  answer55        Int
+  answer56        Int
+  answer57        Int
+  answer58        Int
+  answer59        Int
+  answer60        Int
+  createDate      DateTime @default(now())
+  updateDate      DateTime @updatedAt
+}
+
+model EbtiQuest {
+  id          Int      @id @default(autoincrement())
+  type        String
+  title       String
+  description String   @db.MediumText
+  createDate  DateTime @default(now())
+  updateDate  DateTime @updatedAt
+}
+
+model Ebti1 {
+  id            Int      @id @default(autoincrement())
+  userId        Int?     @default(0)
+  user          User?    @relation(fields: [userId], references: [id])
+  type          String
+  chaeum        Int
+  saeum         Int
+  kium          Int
+  dotum         Int
+  tscoreChaeum  Float
+  tscoreSaeum   Float
+  tscoreKium    Float
+  tscoreDotum   Float
+  percentChaeum Float
+  percentSaeum  Float
+  percentKium   Float
+  percentDotum  Float
+  answer1       Int
+  answer2       Int
+  answer3       Int
+  answer4       Int
+  answer5       Int
+  answer6       Int
+  answer7       Int
+  answer8       Int
+  answer9       Int
+  answer10      Int
+  answer11      Int
+  answer12      Int
+  answer13      Int
+  answer14      Int
+  answer15      Int
+  answer16      Int
+  answer17      Int
+  answer18      Int
+  answer19      Int
+  answer20      Int
+  answer21      Int
+  answer22      Int
+  answer23      Int
+  answer24      Int
+  answer25      Int
+  answer26      Int
+  answer27      Int
+  answer28      Int
+  answer29      Int
+  answer30      Int
+  answer31      Int
+  answer32      Int
+  answer33      Int
+  answer34      Int
+  answer35      Int
+  answer36      Int
+  answer37      Int
+  answer38      Int
+  answer39      Int
+  answer40      Int
+  answer41      Int
+  answer42      Int
+  answer43      Int
+  answer44      Int
+  answer45      Int
+  answer46      Int
+  answer47      Int
+  answer48      Int
+  answer49      Int
+  answer50      Int
+  answer51      Int
+  answer52      Int
+  answer53      Int
+  answer54      Int
+  answer55      Int
+  answer56      Int
+  answer57      Int
+  answer58      Int
+  answer59      Int
+  answer60      Int
+  result1       Int
+  result2       Int
+  result3       Int
+  result4       Int
+  result5       Int
+  result6       Int
+  result7       Int
+  result8       Int
+  result9       Int
+  result10      Int
+  result11      Int
+  result12      Int
+  result13      Int
+  result14      Int
+  result15      Int
+  result16      Int
+  result17      Int
+  result18      Int
+  result19      Int
+  result20      Int
+  createDate    DateTime @default(now())
+  updateDate    DateTime @updatedAt
+}
+
+model Ebti1Quest {
+  id         Int      @id @default(autoincrement())
+  type       String
+  title      String
+  subtype    String
+  createDate DateTime @default(now())
+  updateDate DateTime @updatedAt
+}
+
+model Ebti2 {
+  id                   Int      @id @default(autoincrement())
+  userId               Int?     @default(0)
+  user                 User?    @relation(fields: [userId], references: [id])
+  type                 String
+  language             Int
+  math                 Int
+  view                 Int
+  body                 Int
+  music                Int
+  nature               Int
+  self                 Int
+  interpersonal        Int
+  tscoreLanguage       Float
+  tscoreMath           Float
+  tscoreView           Float
+  tscoreBody           Float
+  tscoreMusic          Float
+  tscoreNature         Float
+  tscoreSelf           Float
+  tscoreInterpersonal  Float
+  percentLanguage      Float
+  percentMath          Float
+  percentView          Float
+  percentBody          Float
+  percentMusic         Float
+  percentNature        Float
+  percentSelf          Float
+  percentInterpersonal Float
+  answer1              Int
+  answer2              Int
+  answer3              Int
+  answer4              Int
+  answer5              Int
+  answer6              Int
+  answer7              Int
+  answer8              Int
+  answer9              Int
+  answer10             Int
+  answer11             Int
+  answer12             Int
+  answer13             Int
+  answer14             Int
+  answer15             Int
+  answer16             Int
+  answer17             Int
+  answer18             Int
+  answer19             Int
+  answer20             Int
+  answer21             Int
+  answer22             Int
+  answer23             Int
+  answer24             Int
+  answer25             Int
+  answer26             Int
+  answer27             Int
+  answer28             Int
+  answer29             Int
+  answer30             Int
+  answer31             Int
+  answer32             Int
+  answer33             Int
+  answer34             Int
+  answer35             Int
+  answer36             Int
+  answer37             Int
+  answer38             Int
+  answer39             Int
+  answer40             Int
+  answer41             Int
+  answer42             Int
+  answer43             Int
+  answer44             Int
+  answer45             Int
+  answer46             Int
+  answer47             Int
+  answer48             Int
+  answer49             Int
+  answer50             Int
+  answer51             Int
+  answer52             Int
+  answer53             Int
+  answer54             Int
+  answer55             Int
+  answer56             Int
+  createDate           DateTime @default(now())
+  updateDate           DateTime @updatedAt
+}
+
+model Ebti2Quest {
+  id         Int      @id @default(autoincrement())
+  type       String
+  title      String
+  createDate DateTime @default(now())
+  updateDate DateTime @updatedAt
+}
+
+model CustomizedPlan {
+  id                   Int      @id @default(autoincrement())
+  user                 User     @relation(fields: [userId], references: [id])
+  userId               Int
+  subjectId            Int
+  subject              Subject  @relation(fields: [subjectId], references: [id])
+  date                 DateTime
+  startTime            Int
+  endTime              Int
+  status               Int // 1:미완료, 2:미흡, 3:완료
+  type                 Int // 플랜 형태
+  conceptTextbookName  String
+  conceptTextbook      Textbook @relation("conceptCustomizedPlanTextbook", fields: [conceptTextbookName], references: [name])
+  conceptUnit          String
+  conceptAmount        String
+  questionTextbookName String
+  questionTextbook     Textbook @relation("questionCustomizedPlanTextbook", fields: [questionTextbookName], references: [name])
+  questionUnit         String
+  questionAmount       String
+  advancedTextbookName String
+  advancedTextbook     Textbook @relation("advancedCustomizedPlanTextbook", fields: [advancedTextbookName], references: [name])
+  advancedUnit         String
+  advancedAmount       String
+  actualTextbookName   String
+  actualTextbook       Textbook @relation("actualCustomizedPlanTextbook", fields: [actualTextbookName], references: [name])
+  actualUnit           String
+  actualAmount         String
+  createDate           DateTime @default(now())
+  updateDate           DateTime @updatedAt
+}
+
+model College {
+  id                Int                 @id @default(autoincrement())
+  name              String
+  year              Int
+  collegeDepartment CollegeDepartment[]
+  createDate        DateTime            @default(now())
+  updateDate        DateTime            @updatedAt
+
+  @@unique([name, year])
+}
+
+model CollegeDepartment {
+  id                 Int     @id @default(autoincrement())
+  name               String // 학과명
+  url                String? // 입학처
+  earlyTotalAmount   Int // 수시 총 모집인원
+  regularTotalAmount Int // 정시 총 모집인원
+  collegeId          Int
+  college            College @relation(fields: [collegeId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  user               User[]
+
+  earlyBookName     String? @db.LongText // 전형 이름
+  earlyBookAmount   Int     @default(0) // 모집인원
+  earlyBookRate     String? @db.LongText // 작년 경쟁률
+  earlyBookSatLimit String? @db.LongText // 수능 최저등급
+  earlyBookMethod1  String? @db.LongText // 전형 방법
+  earlyBookMethod2  String? @db.LongText // 전형 방법
+
+  earlyTotal1Name     String? @db.LongText // 전형 이름
+  earlyTotal1Amount   Int     @default(0) // 모집인원
+  earlyTotal1Rate     String? @db.LongText // 작년 경쟁률
+  earlyTotal1SatLimit String? @db.LongText // 수능 최저등급
+  earlyTotal1Method1  String? @db.LongText // 전형 방법
+  earlyTotal1Method2  String? @db.LongText // 전형 방법
+
+  earlyTotal2Name     String? @db.LongText // 전형 이름
+  earlyTotal2Amount   Int     @default(0) // 모집인원
+  earlyTotal2Rate     String? @db.LongText // 작년 경쟁률
+  earlyTotal2SatLimit String? @db.LongText // 수능 최저등급
+  earlyTotal2Method1  String? @db.LongText // 전형 방법
+  earlyTotal2Method2  String? @db.LongText // 전형 방법
+
+  earlyEssayName     String? @db.LongText // 전형 이름
+  earlyEssayAmount   Int     @default(0) // 모집인원
+  earlyEssayRate     String? @db.LongText // 작년 경쟁률
+  earlyEssaySatLimit String? @db.LongText // 수능 최저등급
+  earlyEssayMethod1  String? @db.LongText // 전형 방법
+  earlyEssayMethod2  String? @db.LongText // 전형 방법
+
+  earlySpecialName     String? @db.LongText // 전형 이름
+  earlySpecialAmount   Int     @default(0) // 모집인원
+  earlySpecialRate     String? @db.LongText // 작년 경쟁률
+  earlySpecialSatLimit String? @db.LongText // 수능 최저등급
+  earlySpecialMethod1  String? @db.LongText // 전형 방법
+  earlySpecialMethod2  String? @db.LongText // 전형 방법
+
+  regular1Name       String? @db.LongText // 정시 이름
+  regular1Amount     Int     @default(0) // 모집인원
+  regular1Rate       String? @db.LongText // 작년 경쟁률
+  regular1SatUnit    String? @db.LongText // 수능 활용 지표
+  regular1Reflection String? @db.LongText // 반영 비율
+  regular1Method1    String? @db.LongText // 전형 방법
+  regular1Method2    String? @db.LongText // 전형 방법
+
+  regular2Name       String? @db.LongText // 정시 이름
+  regular2Amount     Int     @default(0) // 모집인원
+  regular2Rate       String? @db.LongText // 작년 경쟁률
+  regular2SatUnit    String? @db.LongText // 수능 활용 지표
+  regular2Reflection String? @db.LongText // 반영 비율
+  regular2Method1    String? @db.LongText // 전형 방법
+  regular2Method2    String? @db.LongText // 전형 방법
+
+  etc1  String? @db.LongText // 비고 1
+  etc2  String? @db.LongText // 비고 2
+  etc3  String? @db.LongText // 비고 3
+  etc4  String? @db.LongText // 비고 4
+  etc5  String? @db.LongText // 비고 5
+  etc6  String? @db.LongText // 비고 6
+  etc7  String? @db.LongText // 비고 7
+  etc8  String? @db.LongText // 비고 8
+  etc9  String? @db.LongText // 비고 9
+  etc10 String? @db.LongText // 비고 10
+
+  createDate DateTime @default(now())
+  updateDate DateTime @updatedAt
+
+  @@unique([name, collegeId])
+}
+
+model ExpectSchool {
+  id                Int     @id @default(autoincrement())
+  userId            Int
+  user              User    @relation(fields: [userId], references: [id])
+  subjectId         Int
+  subject           Subject @relation(fields: [subjectId], references: [id])
+  averageScore      Float   @default(0)
+  averageRate       Float   @default(0)
+  expectScore       Float   @default(0)
+  beforeExpectScore Float   @default(0)
+
+  first1MidName       String? // 시험과목
+  first1MidScore      Int? // 원점수
+  first1MidAverage    Int? // 과목평균
+  first1MidUnit       Int? // 이수단위
+  first1MidRate       Int? // 등급/성취도
+  first1FinalName     String? // 시험과목
+  first1FinalScore    Int? // 원점수
+  first1FinalAverage  Int? // 과목평균
+  first1FinalUnit     Int? // 이수단위
+  first1FinalRate     Int? // 등급/성취도
+  first2MidName       String? // 시험과목
+  first2MidScore      Int? // 원점수
+  first2MidAverage    Int? // 과목평균
+  first2MidUnit       Int? // 이수단위
+  first2MidRate       Int? // 등급/성취도
+  first2FinalName     String? // 시험과목
+  first2FinalScore    Int? // 원점수
+  first2FinalAverage  Int? // 과목평균
+  first2FinalUnit     Int? // 이수단위
+  first2FinalRate     Int? // 등급/성취도
+  second1MidName      String? // 시험과목
+  second1MidScore     Int? // 원점수
+  second1MidAverage   Int? // 과목평균
+  second1MidUnit      Int? // 이수단위
+  second1MidRate      Int? // 등급/성취도
+  second1FinalName    String? // 시험과목
+  second1FinalScore   Int? // 원점수
+  second1FinalAverage Int? // 과목평균
+  second1FinalUnit    Int? // 이수단위
+  second1FinalRate    Int? // 등급/성취도
+  second2MidName      String? // 시험과목
+  second2MidScore     Int? // 원점수
+  second2MidAverage   Int? // 과목평균
+  second2MidUnit      Int? // 이수단위
+  second2MidRate      Int? // 등급/성취도
+  second2FinalName    String? // 시험과목
+  second2FinalScore   Int? // 원점수
+  second2FinalAverage Int? // 과목평균
+  second2FinalUnit    Int? // 이수단위
+  second2FinalRate    Int? // 등급/성취도
+  third1MidName       String? // 시험과목
+  third1MidScore      Int? // 원점수
+  third1MidAverage    Int? // 과목평균
+  third1MidUnit       Int? // 이수단위
+  third1MidRate       Int? // 등급/성취도
+  third1FinalName     String? // 시험과목
+  third1FinalScore    Int? // 원점수
+  third1FinalAverage  Int? // 과목평균
+  third1FinalUnit     Int? // 이수단위
+  third1FinalRate     Int? // 등급/성취도
+  third2MidName       String? // 시험과목
+  third2MidScore      Int? // 원점수
+  third2MidAverage    Int? // 과목평균
+  third2MidUnit       Int? // 이수단위
+  third2MidRate       Int? // 등급/성취도
+  third2FinalName     String? // 시험과목
+  third2FinalScore    Int? // 원점수
+  third2FinalAverage  Int? // 과목평균
+  third2FinalUnit     Int? // 이수단위
+  third2FinalRate     Int? // 등급/성취도
+
+  createDate DateTime @default(now())
+  updateDate DateTime @updatedAt
+
+  @@unique([userId, subjectId])
+}
+
+model ExpectExam {
+  id                Int     @id @default(autoincrement())
+  userId            Int
+  user              User    @relation(fields: [userId], references: [id])
+  subjectId         Int
+  subject           Subject @relation(fields: [subjectId], references: [id])
+  averageScore      Float   @default(0)
+  averageRate       Float   @default(0)
+  expectScore       Float   @default(0)
+  beforeExpectScore Float   @default(0)
+
+  first1Name           String? // 시험과목
+  first1Date           DateTime? // 시험일
+  first1Institute      String? // 시험처
+  first1Score          Int? // 원점수
+  first1Average        Int? // 과목평균
+  first1Unit           Int? // 이수단위
+  first1Rate           Int? // 등급
+  first1Percent        Int? // 백분위
+  first1StandardScore  Int? // 표준점수
+  first2Name           String? // 시험과목
+  first2Date           DateTime? // 시험일
+  first2Institute      String? // 시험처
+  first2Score          Int? // 원점수
+  first2Average        Int? // 과목평균
+  first2Unit           Int? // 이수단위
+  first2Rate           Int? // 등급
+  first2Percent        Int? // 백분위
+  first2StandardScore  Int? // 표준점수
+  first3Name           String? // 시험과목
+  first3Date           DateTime? // 시험일
+  first3Institute      String? // 시험처
+  first3Score          Int? // 원점수
+  first3Average        Int? // 과목평균
+  first3Unit           Int? // 이수단위
+  first3Rate           Int? // 등급
+  first3Percent        Int? // 백분위
+  first3StandardScore  Int? // 표준점수
+  first4Name           String? // 시험과목
+  first4Date           DateTime? // 시험일
+  first4Institute      String? // 시험처
+  first4Score          Int? // 원점수
+  first4Average        Int? // 과목평균
+  first4Unit           Int? // 이수단위
+  first4Rate           Int? // 등급
+  first4Percent        Int? // 백분위
+  first4StandardScore  Int? // 표준점수
+  second1Name          String? // 시험과목
+  second1Date          DateTime? // 시험일
+  second1Institute     String? // 시험처
+  second1Score         Int? // 원점수
+  second1Average       Int? // 과목평균
+  second1Unit          Int? // 이수단위
+  second1Rate          Int? // 등급
+  second1Percent       Int? // 백분위
+  second1StandardScore Int? // 표준점수
+  second2Name          String? // 시험과목
+  second2Date          DateTime? // 시험일
+  second2Institute     String? // 시험처
+  second2Score         Int? // 원점수
+  second2Average       Int? // 과목평균
+  second2Unit          Int? // 이수단위
+  second2Rate          Int? // 등급
+  second2Percent       Int? // 백분위
+  second2StandardScore Int? // 표준점수
+  second3Name          String? // 시험과목
+  second3Date          DateTime? // 시험일
+  second3Institute     String? // 시험처
+  second3Score         Int? // 원점수
+  second3Average       Int? // 과목평균
+  second3Unit          Int? // 이수단위
+  second3Rate          Int? // 등급
+  second3Percent       Int? // 백분위
+  second3StandardScore Int? // 표준점수
+  second4Name          String? // 시험과목
+  second4Date          DateTime? // 시험일
+  second4Institute     String? // 시험처
+  second4Score         Int? // 원점수
+  second4Average       Int? // 과목평균
+  second4Unit          Int? // 이수단위
+  second4Rate          Int? // 등급
+  second4Percent       Int? // 백분위
+  second4StandardScore Int? // 표준점수
+  third1Name           String? // 시험과목
+  third1Date           DateTime? // 시험일
+  third1Institute      String? // 시험처
+  third1Score          Int? // 원점수
+  third1Average        Int? // 과목평균
+  third1Unit           Int? // 이수단위
+  third1Rate           Int? // 등급
+  third1Percent        Int? // 백분위
+  third1StandardScore  Int? // 표준점수
+  third2Name           String? // 시험과목
+  third2Date           DateTime? // 시험일
+  third2Institute      String? // 시험처
+  third2Score          Int? // 원점수
+  third2Average        Int? // 과목평균
+  third2Unit           Int? // 이수단위
+  third2Rate           Int? // 등급
+  third2Percent        Int? // 백분위
+  third2StandardScore  Int? // 표준점수
+  third3Name           String? // 시험과목
+  third3Date           DateTime? // 시험일
+  third3Institute      String? // 시험처
+  third3Score          Int? // 원점수
+  third3Average        Int? // 과목평균
+  third3Unit           Int? // 이수단위
+  third3Rate           Int? // 등급
+  third3Percent        Int? // 백분위
+  third3StandardScore  Int? // 표준점수
+  third4Name           String? // 시험과목
+  third4Date           DateTime? // 시험일
+  third4Institute      String? // 시험처
+  third4Score          Int? // 원점수
+  third4Average        Int? // 과목평균
+  third4Unit           Int? // 이수단위
+  third4Rate           Int? // 등급
+  third4Percent        Int? // 백분위
+  third4StandardScore  Int? // 표준점수
+  third5Name           String? // 시험과목
+  third5Date           DateTime? // 시험일
+  third5Institute      String? // 시험처
+  third5Score          Int? // 원점수
+  third5Average        Int? // 과목평균
+  third5Unit           Int? // 이수단위
+  third5Rate           Int? // 등급
+  third5Percent        Int? // 백분위
+  third5StandardScore  Int? // 표준점수
+
+  createDate DateTime @default(now())
+  updateDate DateTime @updatedAt
+
+  @@unique([userId, subjectId])
+}
+
+model ExpectStudent {
+  id              Int   @id @default(autoincrement())
+  user            User  @relation(fields: [userId], references: [id])
+  userId          Int
+  type            Int // 1: 동아리 2: 독서 3: 수상 4: 세부능력 특기사항 5: 봉사 6: 진로 7: 자율
+  careerRelevance Float @default(0) // 진로 연계성
+  satisfaction    Float @default(0) // 만족도
+  activity        Int   @default(0) // 활동 수
+  study           Int   @default(0) // 학업 역량
+  career          Int   @default(0) // 진로 역량
+  community       Int   @default(0) //공동체 역량
+
+  first1Name             String? // 활동명
+  first1Topic            String? // 관심주제
+  first1Meter            String? // 활동계기
+  first1Process          String? // 활동과정
+  first1Impression       String? // 느낀점
+  first1Ability          Int? // 핵심역량, 1:학업역량 2:진로역량 3:공동체역량
+  first1CareerRelevance  Int? // 진로 연계성, 1:95%이상 2:90%~95% 미만 3:85%~90% 미만 4:80%~85% 미만 5:70%~80% 미만 6:60%~70%미만 7:50%~60%미만 8:50%미만
+  first1Satisfaction     Int? // 만족도, 1:95%이상 2:90%~95% 미만 3:85%~90% 미만 4:80%~85% 미만 5:70%~80% 미만 6:60%~70%미만 7:50%~60%미만 8:50%미만
+  first2Name             String? // 활동명
+  first2Topic            String? // 관심주제
+  first2Meter            String? // 활동계기
+  first2Process          String? // 활동과정
+  first2Impression       String? // 느낀점
+  first2Ability          Int? // 핵심역량, 1:학업역량 2:진로역량 3:공동체역량
+  first2CareerRelevance  Int? // 진로 연계성, 1:95%이상 2:90%~95% 미만 3:85%~90% 미만 4:80%~85% 미만 5:70%~80% 미만 6:60%~70%미만 7:50%~60%미만 8:50%미만
+  first2Satisfaction     Int? // 만족도, 1:95%이상 2:90%~95% 미만 3:85%~90% 미만 4:80%~85% 미만 5:70%~80% 미만 6:60%~70%미만 7:50%~60%미만 8:50%미만
+  second1Name            String? // 활동명
+  second1Topic           String? // 관심주제
+  second1Meter           String? // 활동계기
+  second1Process         String? // 활동과정
+  second1Impression      String? // 느낀점
+  second1Ability         Int? // 핵심역량, 1:학업역량 2:진로역량 3:공동체역량
+  second1CareerRelevance Int? // 진로 연계성, 1:95%이상 2:90%~95% 미만 3:85%~90% 미만 4:80%~85% 미만 5:70%~80% 미만 6:60%~70%미만 7:50%~60%미만 8:50%미만
+  second1Satisfaction    Int? // 만족도, 1:95%이상 2:90%~95% 미만 3:85%~90% 미만 4:80%~85% 미만 5:70%~80% 미만 6:60%~70%미만 7:50%~60%미만 8:50%미만
+  second2Name            String? // 활동명
+  second2Topic           String? // 관심주제
+  second2Meter           String? // 활동계기
+  second2Process         String? // 활동과정
+  second2Impression      String? // 느낀점
+  second2Ability         Int? // 핵심역량, 1:학업역량 2:진로역량 3:공동체역량
+  second2CareerRelevance Int? // 진로 연계성, 1:95%이상 2:90%~95% 미만 3:85%~90% 미만 4:80%~85% 미만 5:70%~80% 미만 6:60%~70%미만 7:50%~60%미만 8:50%미만
+  second2Satisfaction    Int? // 만족도, 1:95%이상 2:90%~95% 미만 3:85%~90% 미만 4:80%~85% 미만 5:70%~80% 미만 6:60%~70%미만 7:50%~60%미만 8:50%미만
+  third1Name             String? // 활동명
+  third1Topic            String? // 관심주제
+  third1Meter            String? // 활동계기
+  third1Process          String? // 활동과정
+  third1Impression       String? // 느낀점
+  third1Ability          Int? // 핵심역량, 1:학업역량 2:진로역량 3:공동체역량
+  third1CareerRelevance  Int? // 진로 연계성, 1:95%이상 2:90%~95% 미만 3:85%~90% 미만 4:80%~85% 미만 5:70%~80% 미만 6:60%~70%미만 7:50%~60%미만 8:50%미만
+  third1Satisfaction     Int? // 만족도, 1:95%이상 2:90%~95% 미만 3:85%~90% 미만 4:80%~85% 미만 5:70%~80% 미만 6:60%~70%미만 7:50%~60%미만 8:50%미만
+  third2Name             String? // 활동명
+  third2Topic            String? // 관심주제
+  third2Meter            String? // 활동계기
+  third2Process          String? // 활동과정
+  third2Impression       String? // 느낀점
+  third2Ability          Int? // 핵심역량, 1:학업역량 2:진로역량 3:공동체역량
+  third2CareerRelevance  Int? // 진로 연계성, 1:95%이상 2:90%~95% 미만 3:85%~90% 미만 4:80%~85% 미만 5:70%~80% 미만 6:60%~70%미만 7:50%~60%미만 8:50%미만
+  third2Satisfaction     Int? // 만족도, 1:95%이상 2:90%~95% 미만 3:85%~90% 미만 4:80%~85% 미만 5:70%~80% 미만 6:60%~70%미만 7:50%~60%미만 8:50%미만
+
+  createDate DateTime @default(now())
+  updateDate DateTime @updatedAt
+
+  @@unique([userId, type])
+}
+
+model Trainer {
+  id             Int       @id @default(autoincrement())
+  managerId      Int
+  manager        Manager   @relation(fields: [managerId], references: [id])
+  name           String
+  thumbnail      String?   @db.LongText
+  phone          String
+  subject        Subject[]
+  anotherCourse  Boolean
+  anotherStudent Boolean
+  anotherEarly   Boolean
+  anotherRegular Boolean
+  monday         String
+  tuesday        String
+  wednesday      String
+  thursday       String
+  friday         String
+  saturday       String
+  sunday         String
+  createDate     DateTime  @default(now())
+  updateDate     DateTime  @updatedAt
+}
+
+model Invoice {
+  id                    Int     @id @default(autoincrement())
+  managerId             Int
+  manager               Manager @relation(fields: [managerId], references: [id])
+  name                  String
+  email                 String
+  businessName          String
+  businessNumber        String
+  businessCeoName       String
+  businessPhone         String
+  businessAddress       String
+  businessAddressDetail String
+  majorkeyName          String
+  majorkeyNumber        String
+  majorkeyCeoName       String
+  majorkeyPhone         String
+  majorkeyAddress       String
+  majorkeyAddressDetail String
+
+  olderPrice   Int      @default(0)
+  olderMember  Int      @default(0)
+  firstPrice   Int      @default(0)
+  firstMember  Int      @default(0)
+  secondPrice  Int      @default(0)
+  secondMember Int      @default(0)
+  thirdPrice   Int      @default(0)
+  thirdMember  Int      @default(0)
+  totalPrice   Int      @default(0)
+  totalMember  Int      @default(0)
+  createDate   DateTime @default(now())
+}
+
+model InvoiceUserLog {
+  id         Int      @id @default(autoincrement())
+  type       Int      @default(1) // 1: 승인 2: 탈퇴
+  managerId  Int
+  manager    Manager  @relation(fields: [managerId], references: [id])
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+  createDate DateTime @default(now())
+}
